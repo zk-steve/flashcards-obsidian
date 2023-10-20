@@ -1,0 +1,10 @@
+{
+  "id": "flashcards-obsidian-dev",
+  "name": "Flashcards (Fixed)",
+  "version": "1.6.5a",
+  "minAppVersion": "0.9.17",
+  "description": "Anki integration, the one that Edme Fixed :P",
+  "author": "Alex Colucci and Edme Vuntak",
+  "authorUrl": "https://github.com/reuseman",
+  "isDesktopOnly": true
+}
