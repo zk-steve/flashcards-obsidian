@@ -246,7 +246,9 @@ export class CardsService {
         }
         card.endOffset += this.totalOffset;
         const offset = card.endOffset;
-
+        if (offset == this.file.length){
+          id = "\n" + id.substring(0, id.length-1);
+        }
         this.updateFile = true;
         this.file =
           this.file.substring(0, offset) +

@@ -1,13 +1,11 @@
-import { ISettings } from "src/conf/settings";
+import {ISettings} from "src/conf/settings";
 import * as showdown from "showdown";
-import { Regex } from "src/conf/regex";
-import { Flashcard } from "../entities/flashcard";
-import { Inlinecard } from "src/entities/inlinecard";
-import { Spacedcard } from "src/entities/spacedcard";
-import { Clozecard } from "src/entities/clozecard";
-import { escapeMarkdown } from "src/utils";
-import { Card } from "src/entities/card";
-import { htmlToMarkdown } from 'obsidian';
+import {Regex} from "src/conf/regex";
+import {Flashcard} from "../entities/flashcard";
+import {Inlinecard} from "src/entities/inlinecard";
+import {Spacedcard} from "src/entities/spacedcard";
+import {Clozecard} from "src/entities/clozecard";
+import {escapeMarkdown} from "src/utils";
 
 export class Parser {
   private regex: Regex;
@@ -86,11 +84,11 @@ export class Parser {
   }
 
   /**
-   * Gives back the ancestor headings of a line.
-   * @param headings The list of all the headings available in a file.
-   * @param line The line whose ancestors need to be calculated.
-   * @param headingLevel The level of the first ancestor heading, i.e. the number of #.
-   */
+	 * Gives back the ancestor headings of a line.
+	 * @param headings The list of all the headings available in a file.
+	 * @param line The line whose ancestors need to be calculated.
+	 * @param headingLevel The level of the first ancestor heading, i.e. the number of #.
+	 */
   private getContext(
     headings: any,
     index: number,
@@ -150,7 +148,7 @@ export class Parser {
       let headingLevel = -1;
       if (match[1]) {
         headingLevel =
-          match[1].trim().length !== 0 ? match[1].trim().length : -1;
+					match[1].trim().length !== 0 ? match[1].trim().length : -1;
       }
       // Match.index - 1 because otherwise in the context there will be even match[1], i.e. the question itself
       const context = contextAware
@@ -172,7 +170,7 @@ export class Parser {
       const tags: string[] = this.parseTags(match[4], globalTags);
       const id: number = match[5] ? Number(match[5]) : -1;
       const inserted: boolean = match[5] ? true : false;
-      const fields: any = { Prompt: prompt };
+      const fields: any = {Prompt: prompt};
       if (this.settings.sourceSupport) {
         fields["Source"] = note;
       }
@@ -219,7 +217,7 @@ export class Parser {
       let headingLevel = -1;
       if (match[1]) {
         headingLevel =
-          match[1].trim().length !== 0 ? match[1].trim().length : -1;
+					match[1].trim().length !== 0 ? match[1].trim().length : -1;
       }
       // Match.index - 1 because otherwise in the context there will be even match[1], i.e. the question itself
       const context = contextAware
@@ -268,7 +266,7 @@ export class Parser {
       const tags: string[] = this.parseTags(match[4], globalTags);
       const id: number = match[5] ? Number(match[5]) : -1;
       const inserted: boolean = match[5] ? true : false;
-      const fields: any = { Text: clozeText, Extra: "" };
+      const fields: any = {Text: clozeText, Extra: ""};
       if (this.settings.sourceSupport) {
         fields["Source"] = note;
       }
@@ -308,7 +306,7 @@ export class Parser {
     for (const match of matches) {
       if (
         match[2].toLowerCase().startsWith("cards-deck") ||
-        match[2].toLowerCase().startsWith("tags")
+				match[2].toLowerCase().startsWith("tags")
       ) {
         continue;
       }
@@ -317,7 +315,7 @@ export class Parser {
       let headingLevel = -1;
       if (match[1]) {
         headingLevel =
-          match[1].trim().length !== 0 ? match[1].trim().length : -1;
+					match[1].trim().length !== 0 ? match[1].trim().length : -1;
       }
       // Match.index - 1 because otherwise in the context there will be even match[1], i.e. the question itself
       const context = contextAware
@@ -342,7 +340,7 @@ export class Parser {
       const tags: string[] = this.parseTags(match[5], globalTags);
       const id: number = match[6] ? Number(match[6]) : -1;
       const inserted: boolean = match[6] ? true : false;
-      const fields: any = { Front: question, Back: answer };
+      const fields: any = {Front: question, Back: answer};
       if (this.settings.sourceSupport) {
         fields["Source"] = note;
       }
@@ -383,10 +381,10 @@ export class Parser {
 
     for (const match of matches) {
       const reversed: boolean =
-        match[3].trim().toLowerCase() ===
-        `#${this.settings.flashcardsTag}-reverse` ||
-        match[3].trim().toLowerCase() ===
-        `#${this.settings.flashcardsTag}/reverse`;
+				match[3].trim().toLowerCase() ===
+				`#${this.settings.flashcardsTag}-reverse` ||
+				match[3].trim().toLowerCase() ===
+				`#${this.settings.flashcardsTag}/reverse`;
       const headingLevel = match[1].trim().length !== 0 ? match[1].length : -1;
       // Match.index - 1 because otherwise in the context there will be even match[1], i.e. the question itself
       const context = contextAware
@@ -405,7 +403,7 @@ export class Parser {
       medias = medias.concat(this.getAudioLinks(answer));
 
       answer = this.getEmbedWrapContent(embedMap, answer);
-
+      // eslint-disable-next-line no-debugger
       question = this.parseLine(question, vault);
       answer = this.parseLine(answer, vault);
 
@@ -414,7 +412,7 @@ export class Parser {
       const tags: string[] = this.parseTags(match[4], globalTags);
       const id: number = match[6] ? Number(match[6]) : -1;
       const inserted: boolean = match[6] ? true : false;
-      const fields: any = { Front: question, Back: answer };
+      const fields: any = {Front: question, Back: answer};
       if (this.settings.sourceSupport) {
         fields["Source"] = note;
       }
@@ -536,7 +534,7 @@ export class Parser {
       for (const tag of str.split("#")) {
         let newTag = tag.trim();
         if (newTag) {
-          // Replace obsidian hierarchy tags delimeter \ with anki delimeter ::
+          // Replace obsidian hierarchy tags delimiter \ with anki delimiter ::
           newTag = newTag.replace(this.regex.tagHierarchy, "::");
           tags.push(newTag);
         }
@@ -547,23 +545,23 @@ export class Parser {
   }
 
   public getAnkiIDsBlocks(file: string): RegExpMatchArray[] {
-    return Array.from(file.matchAll(/\^(\d{13})\s*/gm));
+    return Array.from(file.matchAll(/\[]\((\d{13})\)\s*/gm));
   }
 
   private getEmbedMap() {
 
-    // key：link url 
+    // key：link url
     // value： embed content parse from html document
     const embedMap = new Map()
 
-    var embedList = Array.from(document.documentElement.getElementsByClassName('internal-embed'));
+    const embedList = Array.from(document.documentElement.getElementsByClassName('internal-embed'));
 
 
     Array.from(embedList).forEach((el) => {
       // markdown-embed-content markdown-embed-page
-      var embedValue = this.htmlConverter.makeMarkdown(this.htmlConverter.makeHtml(el.outerHTML).toString());
+      const embedValue = this.htmlConverter.makeMarkdown(this.htmlConverter.makeHtml(el.outerHTML).toString());
 
-      var embedKey = el.getAttribute("src");
+      const embedKey = el.getAttribute("src");
       embedMap.set(embedKey, embedValue);
 
       // console.log("embedKey: \n" + embedKey);
@@ -574,7 +572,7 @@ export class Parser {
   }
 
   private getEmbedWrapContent(embedMap: Map<any, any>, embedContent: string): string {
-    var result = embedContent.match(this.regex.embedBlock);
+    let result = embedContent.match(this.regex.embedBlock);
     while (result = this.regex.embedBlock.exec(embedContent)) {
       // console.log("result[0]: " + result[0]);
       // console.log("embedMap.get(result[1]): " + embedMap.get(result[1]));
