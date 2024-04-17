@@ -1,19 +1,12 @@
-import { Anki } from "src/services/anki";
-import {
-  App,
-  FileSystemAdapter,
-  FrontMatterCache,
-  Notice,
-  parseFrontMatterEntry,
-  TFile,
-} from "obsidian";
-import { Parser } from "src/services/parser";
-import { ISettings } from "src/conf/settings";
-import { Card } from "src/entities/card";
-import { arrayBufferToBase64 } from "src/utils";
-import { Regex } from "src/conf/regex";
-import { noticeTimeout } from "src/conf/constants";
-import { Inlinecard } from "src/entities/inlinecard";
+import {Anki} from "src/services/anki";
+import {App, FileSystemAdapter, FrontMatterCache, Notice, parseFrontMatterEntry, TFile,} from "obsidian";
+import {Parser} from "src/services/parser";
+import {ISettings} from "src/conf/settings";
+import {Card} from "src/entities/card";
+import {arrayBufferToBase64} from "src/utils";
+import {Regex} from "src/conf/regex";
+import {noticeTimeout} from "src/conf/constants";
+import {Inlinecard} from "src/entities/inlinecard";
 
 export class CardsService {
   private app: App;
@@ -68,7 +61,7 @@ export class CardsService {
     }
 
     try {
-      this.anki.storeCodeHighlightMedias();
+      await this.anki.storeCodeHighlightMedias();
       await this.anki.createModels(
         this.settings.sourceSupport,
         this.settings.codeHighlightSupport
@@ -92,8 +85,13 @@ export class CardsService {
         filePath,
         globalTags
       );
+
+      await this.generateMediaLinks(cards, sourcePath);
+      this.fixMediaLinks(cards);
+      await this.anki.storeMediaFiles(cards);
+
       const [cardsToCreate, cardsToUpdate, cardsNotInAnki] =
-        this.filterByUpdate(ankiCards, cards);
+				this.filterByUpdate(ankiCards, cards);
       const cardIds: number[] = this.getCardsIds(ankiCards, cards);
       const cardsToDelete: number[] = this.parser.getCardsToDelete(this.file);
 
@@ -113,7 +111,6 @@ export class CardsService {
       }
       console.info(cardsNotInAnki);
 
-      this.insertMedias(cards, sourcePath);
       await this.deleteCardsOnAnki(cardsToDelete, ankiBlocks);
       await this.updateCardsOnAnki(cardsToUpdate);
       await this.insertCardsOnAnki(cardsToCreate);
@@ -125,7 +122,7 @@ export class CardsService {
       );
       if (deckNeedToBeChanged) {
         try {
-          this.anki.changeDeck(cardIds, deckName);
+          await this.anki.changeDeck(cardIds, deckName);
           this.notifications.push("Cards moved in new deck");
         } catch {
           return ["Error: Could not update deck the file."];
@@ -135,7 +132,7 @@ export class CardsService {
       // Update file
       if (this.updateFile) {
         try {
-          this.app.vault.modify(activeFile, this.file);
+          await this.app.vault.modify(activeFile, this.file);
         } catch (err) {
           Error("Could not update the file.");
           return ["Error: Could not update the file."];
@@ -154,22 +151,8 @@ export class CardsService {
     }
   }
 
-  private async insertMedias(cards: Card[], sourcePath: string) {
-    try {
-      // Currently the media are created for every run, this is not a problem since Anki APIs overwrite the file
-      // A more efficient way would be to keep track of the medias saved
-      await this.generateMediaLinks(cards, sourcePath);
-      await this.anki.storeMediaFiles(cards);
-    } catch (err) {
-      console.error(err);
-      Error("Error: Could not upload medias");
-    }
-  }
-
   private async generateMediaLinks(cards: Card[], sourcePath: string) {
     if (this.app.vault.adapter instanceof FileSystemAdapter) {
-      // @ts-ignore: Unreachable code error
-
       for (const card of cards) {
         for (const media of card.mediaNames) {
           const image = this.app.metadataCache.getFirstLinkpathDest(
@@ -246,14 +229,14 @@ export class CardsService {
         }
         card.endOffset += this.totalOffset;
         const offset = card.endOffset;
-        if (offset == this.file.length){
-          id = "\n" + id.substring(0, id.length-1);
+        if (offset == this.file.length) {
+          id = "\n" + id.substring(0, id.length - 1);
         }
         this.updateFile = true;
         this.file =
-          this.file.substring(0, offset) +
-          id +
-          this.file.substring(offset, this.file.length + 1);
+					this.file.substring(0, offset) +
+					id +
+					this.file.substring(offset, this.file.length + 1);
         this.totalOffset += id.length;
       }
     }
@@ -262,7 +245,7 @@ export class CardsService {
   private async updateCardsOnAnki(cards: Card[]): Promise<number> {
     if (cards.length) {
       try {
-        this.anki.updateCards(cards);
+        await this.anki.updateCards(cards);
         this.notifications.push(
           `Updated successfully ${cards.length}/${cards.length} cards.`
         );
@@ -287,16 +270,13 @@ export class CardsService {
         // Deletion of cards that need to be deleted (i.e. blocks ID that don't have content)
         if (cards.includes(id)) {
           try {
-            this.anki.deleteCards(cards);
+            await this.anki.deleteCards(cards);
             deletedCards++;
 
             this.updateFile = true;
             this.file =
-              this.file.substring(0, block["index"]) +
-              this.file.substring(
-                block["index"] + block[0].length,
-                this.file.length
-              );
+							this.file.substring(0, block["index"]) +
+							this.file.substring(block["index"] + block[0].length, this.file.length);
             this.totalOffset -= block[0].length;
             this.notifications.push(
               `Deleted successfully ${deletedCards}/${cards.length} cards.`
@@ -319,6 +299,23 @@ export class CardsService {
     }
 
     return IDs;
+  }
+
+  private fixMediaLinks(generatedCards: Card[]) {
+    generatedCards.forEach(card => {
+      const fields = Object.entries(card.fields);
+      const mediaNames = card.mediaNames.map(m => m.replaceAll("/", "."));
+      // console.log({fields: JSON.stringify(card.fields), mediaNames, originalMediaNames: card.mediaNames})
+
+      for (const [fieldName, value] of fields) {
+        card.mediaNames.forEach((m, i) => {
+          card.fields[fieldName] = value.replaceAll(m, mediaNames[i])
+        })
+      }
+      card.mediaNames = mediaNames
+      // console.log({fields: JSON.stringify(card.fields)})
+    })
+
   }
 
   public filterByUpdate(ankiCards: any, generatedCards: Card[]) {
