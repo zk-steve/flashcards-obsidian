@@ -54,8 +54,10 @@ export class CardsService {
     if (parseFrontMatterEntry(frontmatter, "cards-deck")) {
       deckName = parseFrontMatterEntry(frontmatter, "cards-deck");
     } else if (this.settings.folderBasedDeck && activeFile.parent.path !== "/") {
+      deckName = activeFile.path.split("/").join("::");
+      deckName = deckName.substring(0, deckName.length - 3);
       // If the current file is in the path "programming/java/strings.md" then the deck name is "programming::java"
-      deckName = activeFile.parent.path.split("/").join("::");
+      // deckName = activeFile.parent.path.split("/").join("::");
     } else {
       deckName = this.settings.deck;
     }
@@ -91,7 +93,7 @@ export class CardsService {
       await this.anki.storeMediaFiles(cards);
 
       const [cardsToCreate, cardsToUpdate, cardsNotInAnki] =
-				this.filterByUpdate(ankiCards, cards);
+                this.filterByUpdate(ankiCards, cards);
       const cardIds: number[] = this.getCardsIds(ankiCards, cards);
       const cardsToDelete: number[] = this.parser.getCardsToDelete(this.file);
 
@@ -234,9 +236,9 @@ export class CardsService {
         }
         this.updateFile = true;
         this.file =
-					this.file.substring(0, offset) +
-					id +
-					this.file.substring(offset, this.file.length + 1);
+                    this.file.substring(0, offset) +
+                    id +
+                    this.file.substring(offset, this.file.length + 1);
         this.totalOffset += id.length;
       }
     }
@@ -275,8 +277,8 @@ export class CardsService {
 
             this.updateFile = true;
             this.file =
-							this.file.substring(0, block["index"]) +
-							this.file.substring(block["index"] + block[0].length, this.file.length);
+                            this.file.substring(0, block["index"]) +
+                            this.file.substring(block["index"] + block[0].length, this.file.length);
             this.totalOffset -= block[0].length;
             this.notifications.push(
               `Deleted successfully ${deletedCards}/${cards.length} cards.`
